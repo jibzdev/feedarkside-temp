@@ -1,3 +1,25 @@
+function loadRecaptcha() {
+    const script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.async = true;
+    script.defer = true;
+
+    script.onload = function () {
+        grecaptcha.render('recaptchaContainer', {
+            'sitekey': '6LfzXlQpAAAAAEoeOeG3xa4GMhKzhhf4IfHvY3La',
+            callback: onRecaptchaVerify,
+        });
+    };
+
+    document.body.appendChild(script);
+}
+
+function onRecaptchaVerify(token) {
+    const submitButton = document.getElementById('sButton');
+    submitButton.disabled = false;
+    submitButton.style.opacity = 1;
+}
+
 let timerExists = false;
 let savedTime = localStorage.getItem("savedTime");
 let timeLeft = savedTime ? Math.max(0, (180 - (Date.now() - savedTime) / 1000)) : 0;
@@ -92,7 +114,7 @@ function timer(){
             setTimeout(() => {
                 error.remove();
             }, 2000);
-        }else{
+        }else{            
             let dropdownValue = document.querySelector("#tools").value;
             let link = document.querySelector("input").value;
             localStorage.setItem('savedTime', Date.now());
@@ -113,15 +135,14 @@ function timer(){
             }
 
             sButton.addEventListener("click",sendReq(platform,dropdownValue,link));
-    
         }
     });
 }
 
 
-function sendReq(platform, dropdownValue, link) {
+function sendReq(platform, dropdownValue, link, recaptchaToken) {
     let header = document.querySelector("#header");
-    const value = `https://darksidepanel.com/api/v2/${platform}/${dropdownValue}api?link=${link}`;
+    const value = `/${platform}/${dropdownValue}api?link=${link}`;
     fetch(value, {
         method: 'POST',
         headers: {
@@ -150,6 +171,7 @@ function sendReq(platform, dropdownValue, link) {
 }
 
 
+
 document.addEventListener("DOMContentLoaded", () => {
     let navbar = document.querySelector("#nav");
     let menuIcon = document.querySelector(".menu-icon");
@@ -160,6 +182,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let youtube = document.querySelector("#youtube");
 
     menuIcon.addEventListener("click", () => {
+        menuIcon.classList.toggle("active");
+    });
+
+    menuIcon.addEventListener("click", () => {
         navbar.classList.toggle("open");
         if (navbar.classList.contains("open")) {
             navbar.style.width = "25%";
@@ -168,70 +194,41 @@ document.addEventListener("DOMContentLoaded", () => {
             navbar.style.width = "0";
             navbar.style.opacity = 0;
         }
+        function generateServiceSection(iconClass, serviceName, inputId) {
+            header.innerHTML = `
+                <i class="fa-brands ${iconClass} fade" style="font-size: 4vh"></i>
+                <h1 id="header-title" class="fade" style="margin-top: 5px;">${serviceName} Service</h1>
+                <p class="fade" style="margin-top:-18px;font-family: 'Inter';font-size:1.5vh;">Enter a link, Free Panel will provide a random value.</p>
+                <br>
+                <select name="tools" id="tools" class="fade">
+                    <option value="followers">Followers</option>
+                    <option value="views">Views</option>
+                    <option value="likes">Likes</option>
+                </select>
+                <br><br>
+                <input placeholder="Enter Link" class="fade" id="${inputId}" name="link">
+                <br><br>
+                <button id="sButton" class="fade" style="opacity: 0.1;" disabled>Submit</button>
+                <br><br>
+                <div id="recaptchaContainer" class="fade" style="margin-left:15px;"></div>
+            `;
+            timer()
+            loadRecaptcha();
+        }
+        
         tiktok.addEventListener("click", () => {
-            header.innerHTML = `
-            <i class="fa-brands fa-tiktok fade" style="font-size: 4vh"></i>
-            <h1 id="header-title" class="fade" style="margin-top: 5px;">TikTok Service</h1>
-            <p class="fade" style="margin-top:-18px;font-family: 'Inter';font-size:1.5vh;">Enter a link, Free Panel will provide a random value.</p>
-            <br>
-            <select name="tools" id="tools" class="fade">
-                <option value="followers">Followers</option>
-                <option value="views">Views</option>
-                <option value="likes">Likes</option>
-            </select>
-            <br><br>
-            <input placeholder="Enter Link" class="fade" id="tiktokInput" name="link">
-            <br><br>
-            <button id="sButton" class="fade">Submit</button>
-            `;
-            timer();
+            generateServiceSection("fa-tiktok", "TikTok", "tiktokInput");
         });
-
+        
         instagram.addEventListener("click", () => {
-            header.innerHTML = `
-            <i class="fa-brands fa-instagram fade" style="font-size: 4vh"></i>
-            <h1 id="header-title" class="fade" style="margin-top: 5px;">Instagram Service</h1>
-            <p class="fade" style="margin-top:-18px;font-family: 'Inter';font-size:1.5vh;">Enter a link, Free Panel will provide a random value.</p>
-            <br>
-            <select name="tools" id="tools" class="fade">
-                <option value="followers">Followers</option>
-                <option value="views">Views</option>
-                <option value="likes">Likes</option>
-            </select>
-            <br><br>
-            <input placeholder="Enter Link" class="fade" id="instagramInput" name="link">
-            <br><br>
-            <button id="sButton" class="fade">Submit</button>
-            `;
-            timer();
+            generateServiceSection("fa-instagram", "Instagram", "instagramInput");
         });
-
+        
         youtube.addEventListener("click", () => {
-            header.innerHTML = `
-            <i class="fa-brands fa-youtube fade" style="font-size: 4vh"></i>
-            <h1 id="header-title" class="fade" style="margin-top: 5px;">Youtube Service</h1>
-            <p class="fade" style="margin-top:-18px;font-family: 'Inter';font-size:1.5vh;">Enter a link, Free Panel will provide a random value.</p>
-            <br>
-            <select name="tools" id="tools" class="fade">
-                <option value="followers">Followers</option>
-                <option value="views">Views</option>
-                <option value="likes">Likes</option>
-            </select>
-            <br><br>
-            <input placeholder="Enter Link" class="fade" id="youtubeInput" name="link">
-            <br><br>
-            <button id="sButton" class="fade">Submit</button>
-            `;
-            timer();
-            });
-});
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-    let menuIcon = document.querySelector(".menu-icon");
-
-    menuIcon.addEventListener("click", () => {
-        menuIcon.classList.toggle("active");
+            generateServiceSection("fa-youtube", "Youtube", "youtubeInput");
+        });
+        
     });
 });
+
 console.log("Script loaded!");
