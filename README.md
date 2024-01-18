@@ -1,24 +1,8 @@
-# README
+# **Free Panel**
+This repo includes the frontend design for darksidepanel's free panel, feel free to use as you wish. Backend is not provided however you can achieve a similar result using the [DarkSide Panel API](https://darksidepanel.com/api)
+![image](https://github.com/llyrdavies/feedarkside-temp/assets/146123002/648da045-9320-4d39-b32e-e393de12b9c8)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
 
-Things you may want to cover:
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+# **Credits**
+_jibz_
