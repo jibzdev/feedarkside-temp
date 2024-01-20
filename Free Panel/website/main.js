@@ -1,25 +1,3 @@
-function loadRecaptcha() {
-    const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js';
-    script.async = true;
-    script.defer = true;
-
-    script.onload = function () {
-        grecaptcha.render('recaptchaContainer', {
-            'sitekey': '6LfzXlQpAAAAAEoeOeG3xa4GMhKzhhf4IfHvY3La',
-            callback: onRecaptchaVerify,
-        });
-    };
-
-    document.body.appendChild(script);
-}
-
-function onRecaptchaVerify(token) {
-    const submitButton = document.getElementById('sButton');
-    submitButton.disabled = false;
-    submitButton.style.opacity = 1;
-}
-
 let timerExists = false;
 let savedTime = localStorage.getItem("savedTime");
 let timeLeft = savedTime ? Math.max(0, (180 - (Date.now() - savedTime) / 1000)) : 0;
@@ -46,20 +24,8 @@ function startTimer(duration) {
     }, 1000);
 }
 
-window.addEventListener("load", () => {
-    if (savedTime) {
-        timeLeft = Math.max(0, 180 - (Date.now() - savedTime) / 1000);
-        console.log(timeLeft);
-        if (timeLeft > 0) {
-            timerExists = true;
-            startTimer(timeLeft);
-        }
-    }
-});
-
 function timer(){
-    let submitButton = document.querySelector("#sButton");
-    
+    const submitButton = document.querySelector("#sButton");
     function startTimer(duration) {
         let timer = duration, minutes, seconds;
         let display = document.querySelector('#timer');
@@ -98,11 +64,15 @@ function timer(){
         submitButton.style.opacity = 1;
         }
     }
+}
+
+function submit() {
+    let submitButton = document.querySelector("#sButton");
 
     submitButton.addEventListener("click", () => {
         let inputField = document.querySelector("input");
         const linkRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
-    
+
         if (!linkRegex.test(inputField.value) || inputField.value === "") {
             let error = document.createElement("p");
             error.setAttribute("id", "error");
@@ -114,63 +84,68 @@ function timer(){
             setTimeout(() => {
                 error.remove();
             }, 2000);
-        }else{            
+        } else {
             let dropdownValue = document.querySelector("#tools").value;
             let link = document.querySelector("input").value;
-            localStorage.setItem('savedTime', Date.now());
-
             let platform;
-            let sButton = document.querySelector("#sButton");
             let header_title = document.querySelector("#header-title");
-            let headerL = header_title.textContent.toLowerCase();           
+            let headerL = header_title.textContent.toLowerCase();
             if (headerL.includes("tiktok")) {
                 platform = "tiktok";
             } else if (headerL.includes("youtube")) {
                 platform = "youtube";
-                if(dropdownValue === "followers"){
+                if (dropdownValue === "followers") {
                     dropdownValue = "subscribers";
                 }
             } else {
                 platform = "instagram";
             }
 
-            sButton.addEventListener("click",sendReq(platform,dropdownValue,link));
+            let header = document.querySelector("#header");
+            const value = `/${platform}/${dropdownValue}api?link=${link}`;
+            fetch(value, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ value }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    header.innerHTML = `
+                    <i class="fa-solid fa-circle-check fade" style="font-size: 6vh; color: green;"></i>
+                    <h1 class="fade" style="font-size: 4vh;">Request Sent</h1>`;
+                    localStorage.setItem('savedTime', Date.now());
+                    startTimer(180);
+                } else {
+                    header.innerHTML = `
+                    <i class="fa-solid fa-circle-xmark fade" style="font-size: 6vh; color: red;"></i>
+                    <h1 class="fade" style="font-size: 4vh;">Bad Request</h1>
+                    <p>Try again. (${response.status} - ${response.statusText})</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                header.innerHTML = `
+                <i class="fa-solid fa-circle-xmark fade" style="font-size: 6vh; color: red;"></i>
+                <h1 class="fade" style="font-size: 4vh;">Bad Request</h1>
+                <p>Try again. (${error})</p>
+                `;
+            });
         }
     });
 }
 
-
-function sendReq(platform, dropdownValue, link, recaptchaToken) {
-    let header = document.querySelector("#header");
-    const value = `/${platform}/${dropdownValue}api?link=${link}`;
-    fetch(value, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ value }),
-    })
-    .then(response => {
-        if (response.ok) {
-            console.log("Request Sent Successfully.");
-            header.innerHTML = `
-            <i class="fa-solid fa-circle-check fade" style="font-size: 6vh; color: green;"></i>
-            <h1 class="fade" style="font-size: 4vh;">Request Sent</h1>`;
-            startTimer(180);
-        } else {
+window.addEventListener("load", () => {
+    if (savedTime) {
+        timeLeft = Math.max(0, 180 - (Date.now() - savedTime) / 1000);
+        console.log(timeLeft);
+        if (timeLeft > 0) {
+            timerExists = true;
+            startTimer(timeLeft);
         }
-    })
-    .catch(error => {
-        console.error("Error Sending Request.");
-        header.innerHTML = `
-        <i class="fa-solid fa-circle-xmark fade" style="font-size: 6vh; color: red;"></i>
-        <h1 class="fade" style="font-size: 4vh;">Bad Request</h1>
-        <p>Try again. (${error})</p>
-        `;
-    });
-}
-
-
+    }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     let navbar = document.querySelector("#nav");
@@ -194,40 +169,40 @@ document.addEventListener("DOMContentLoaded", () => {
             navbar.style.width = "0";
             navbar.style.opacity = 0;
         }
-        function generateServiceSection(iconClass, serviceName, inputId) {
+        function generateServiceSection(iconClass, serviceName, inputId, serviceOptions) {
+            let optionsHTML = serviceOptions.map(option => `<option value="${option.toLowerCase()}">${option}</option>`).join('');
+    
             header.innerHTML = `
                 <i class="fa-brands ${iconClass} fade" style="font-size: 4vh"></i>
                 <h1 id="header-title" class="fade" style="margin-top: 5px;">${serviceName} Service</h1>
                 <p class="fade" style="margin-top:-18px;font-family: 'Inter';font-size:1.5vh;">Enter a link, Free Panel will provide a random value.</p>
                 <br>
                 <select name="tools" id="tools" class="fade">
-                    <option value="followers">Followers</option>
-                    <option value="views">Views</option>
-                    <option value="likes">Likes</option>
+                    ${optionsHTML}
                 </select>
                 <br><br>
                 <input placeholder="Enter Link" class="fade" id="${inputId}" name="link">
                 <br><br>
-                <button id="sButton" class="fade" style="opacity: 0.1;" disabled>Submit</button>
-                <br><br>
-                <div id="recaptchaContainer" class="fade" style="margin-left:15px;"></div>
+                <button id="sButton" class="fade">Submit</button>
             `;
-            timer()
-            loadRecaptcha();
+            timer();
+            submit();
         }
-        
+    
         tiktok.addEventListener("click", () => {
-            generateServiceSection("fa-tiktok", "TikTok", "tiktokInput");
+            const tiktokOptions = ["Views", "Likes"];
+            generateServiceSection("fa-tiktok", "TikTok", "tiktokInput", tiktokOptions);
         });
-        
+    
         instagram.addEventListener("click", () => {
-            generateServiceSection("fa-instagram", "Instagram", "instagramInput");
+            const instagramOptions = ["Followers", "Likes", "Comments"];
+            generateServiceSection("fa-instagram", "Instagram", "instagramInput", instagramOptions);
         });
-        
+    
         youtube.addEventListener("click", () => {
-            generateServiceSection("fa-youtube", "Youtube", "youtubeInput");
+            const youtubeOptions = ["Subscribers", "Views", "Likes"];
+            generateServiceSection("fa-youtube", "Youtube", "youtubeInput", youtubeOptions);
         });
-        
     });
 });
 
